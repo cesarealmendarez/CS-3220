@@ -1,0 +1,46 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>List Vaccines</title>
+	</head>
+	<body>
+		<p style="margin-left: 40px;"><a href="#">New Vaccine</a> | <a href="#">New Doses</a></p>
+		
+		<div style="margin-left: 40px;">
+	        <table border="1" cellpadding="5" cellspacing="2">
+	            <thead>
+	                <tr>
+	                    <th>Vaccine</th>
+	                    <th>Doses Required</th>
+	                    <th>Days Between Doses</th>
+	                    <th>Total Doses Received</th>
+	                    <th>Total Doses Left</th>
+	                    <th>&nbsp;</th>
+	                </tr>
+	            </thead>
+	            <tbody>
+	                <tr>
+	                    <td>Pfizer/BioNTech</td>
+	                    <td>2</td>
+	                    <td>21</td>
+	                    <td>10000</td>
+	                    <td>10000</td>
+	                    <td><a href="#">Edit</a></td>
+	                </tr>
+	                <tr>
+	                    <td>Johnson &amp; Johnson</td>
+	                    <td>1</td>
+	                    <td></td>
+	                    <td>5000</td>
+	                    <td>5000</td>
+	                    <td><a href="#">Edit</a></td>
+	                </tr>
+	            </tbody>
+	        </table>
+	    </div>		
+	</body>
+</html>

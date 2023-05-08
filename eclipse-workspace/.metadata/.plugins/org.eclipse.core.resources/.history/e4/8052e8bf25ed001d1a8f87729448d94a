@@ -1,0 +1,32 @@
+package servlets;
+
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/NewVaccine")
+public class NewVaccine extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    public NewVaccine() {
+        super();
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("NewVaccine.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String newVaccineName = request.getParameter("newVaccineName");
+       
+        int newVaccineDosesRequired = Integer.parseInt(request.getParameter("newVaccineDosesRequired"));
+        
+        int newVaccineDaysBetweenDoses = Integer.parseInt(request.getParameter("vaccineDaysBetweenDoses"));
+        
+        
+	}
+
+}

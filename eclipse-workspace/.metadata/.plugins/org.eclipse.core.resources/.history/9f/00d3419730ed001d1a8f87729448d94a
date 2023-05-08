@@ -1,0 +1,106 @@
+package models;
+
+import java.util.Date;
+
+public class PatientViewModel {
+    private int id;
+    
+    private String name;
+    
+    private int vaccineID;
+    
+    private String vaccineName;
+    
+    private int vaccineDosesRequired;
+    
+    private int vaccineDosesLeft;
+    
+    private Date firstDoseDate;
+    
+    private Date secondDoseDate;
+
+	public PatientViewModel(int id, String name, int vaccineID, String vaccineName, int vaccineDosesRequired,
+			int vaccineDosesLeft, Date firstDoseDate, Date secondDoseDate) {
+		
+		this.id = id;
+		
+		this.name = name;
+		
+		this.vaccineID = vaccineID;
+		
+		this.vaccineName = vaccineName;
+		
+		this.vaccineDosesRequired = vaccineDosesRequired;
+		
+		this.vaccineDosesLeft = vaccineDosesLeft;
+		
+		this.firstDoseDate = firstDoseDate;
+		
+		this.secondDoseDate = secondDoseDate;
+		
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public int getVaccineID() {
+		return vaccineID;
+	}
+
+	public void setVaccineID(int vaccineID) {
+		this.vaccineID = vaccineID;
+	}
+
+	public String getVaccineName() {
+		return vaccineName;
+	}
+
+	public void setVaccineName(String vaccineName) {
+		this.vaccineName = vaccineName;
+	}
+
+	public int getVaccineDosesRequired() {
+		return vaccineDosesRequired;
+	}
+
+	public void setVaccineDosesRequired(int vaccineDosesRequired) {
+		this.vaccineDosesRequired = vaccineDosesRequired;
+	}
+
+	public int getVaccineDosesLeft() {
+		return vaccineDosesLeft;
+	}
+
+	public void setVaccineDosesLeft(int vaccineDosesLeft) {
+		this.vaccineDosesLeft = vaccineDosesLeft;
+	}
+
+	public Date getFirstDoseDate() {
+		return firstDoseDate;
+	}
+
+	public void setFirstDoseDate(Date firstDoseDate) {
+		this.firstDoseDate = firstDoseDate;
+	}
+
+	public Date getSecondDoseDate() {
+		return secondDoseDate;
+	}
+
+	public void setSecondDoseDate(Date secondDoseDate) {
+		this.secondDoseDate = secondDoseDate;
+	}
+}

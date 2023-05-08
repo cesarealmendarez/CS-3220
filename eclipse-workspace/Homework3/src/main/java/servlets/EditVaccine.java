@@ -1,0 +1,77 @@
+package servlets;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import models.Vaccine;
+
+@WebServlet("/EditVaccine")
+public class EditVaccine extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    public EditVaccine() {
+        super();
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("EditVaccine.jsp").forward(request, response);
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		int vaccineID = Integer.parseInt(request.getParameter("editVaccineID"));
+		
+		String vaccineName = request.getParameter("editVaccineName");
+		
+		int vaccineDosesRequired = Integer.parseInt(request.getParameter("editVaccineDosesRequired"));
+
+		int vaccineDaysBetweenDoses = Integer.parseInt(request.getParameter("editVaccineDaysBetweenDoses"));
+		
+		Connection connection = null;
+		
+		try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      	
+	      	connection = DriverManager.getConnection(url, username, password);
+	      	
+	      	String updateVaccineSTM = "UPDATE vaccines SET name = ?, dosesRequired = ?, daysBetweenDoses = ? WHERE id = ?";
+	      	
+	      	PreparedStatement updateVaccinePSTM = connection.prepareStatement(updateVaccineSTM);
+	      	
+	      	updateVaccinePSTM.setString(1, vaccineName);
+	      	updateVaccinePSTM.setInt(2, vaccineDosesRequired);
+	      	updateVaccinePSTM.setInt(3, vaccineDaysBetweenDoses);
+	      	updateVaccinePSTM.setInt(4, vaccineID);
+	      	
+	      	updateVaccinePSTM.executeUpdate();
+	      	
+		} catch(Exception e) {
+			System.out.println(e);
+		}
+		
+		for (Vaccine vaccine : ((List<Vaccine>) getServletContext().getAttribute("vaccines"))) {
+			if(vaccine.getId() == vaccineID) {
+				vaccine.setName(vaccineName);
+				vaccine.setDosesRequired(vaccineDosesRequired);
+				vaccine.setDaysBetweenDoses(vaccineDaysBetweenDoses);
+			}
+		}
+	
+		
+		response.sendRedirect("ListVaccines");
+	}
+
+}

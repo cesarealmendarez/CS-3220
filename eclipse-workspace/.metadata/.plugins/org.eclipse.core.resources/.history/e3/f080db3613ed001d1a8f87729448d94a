@@ -1,0 +1,72 @@
+package servlets;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import models.Vaccine;
+
+@WebServlet(urlPatterns = "/FrontPage", loadOnStartup = 1)
+public class FrontPage extends HttpServlet {
+	
+	private static final long serialVersionUID = 1L;
+       
+    public FrontPage() {
+        super();
+    }
+    
+    public void init( ServletConfig config ) throws ServletException {
+    	super.init(config);
+    	
+    	getServletContext().removeAttribute("vaccines");
+    	
+    	Connection connection = null;
+    		
+    	try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      	
+	    	connection = DriverManager.getConnection(url, username, password);
+	    	
+	      	Statement selectVaccinesSTM = connection.createStatement();
+	      	
+	      	ResultSet selectVaccinesRS = selectVaccinesSTM.executeQuery("SELECT * FROM vaccines;");
+	      	
+	      	List<Vaccine> vaccines = new ArrayList<Vaccine>(); 
+	      	
+	      	while(selectVaccinesRS.next()) {
+//	      		int vaccineID = 
+//	      		Vaccine vaccine = new Vaccine(0, password, 0, 0, 0, 0)
+	      		System.out.println(selectVaccinesRS.getInt("id"));
+	      		System.out.println(selectVaccinesRS.getString("name"));
+	      	}
+	      	
+	    	
+    	} catch(Exception e) {
+    		System.out.println(e);
+    	}
+    	
+    }
+    
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("FrontPage.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		doGet(request, response);
+	}
+}

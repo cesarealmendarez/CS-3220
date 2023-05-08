@@ -1,0 +1,50 @@
+package servlets;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import models.Vaccine;
+
+@WebServlet("/NewDoses")
+public class NewDoses extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    public NewDoses() {
+        super();
+    }
+    
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("NewDoses.jsp").forward(request, response);
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		int vaccineID = Integer.parseInt(request.getParameter("newDosesVaccineID"));
+		
+		int vaccineDosesRecieved = Integer.parseInt(request.getParameter("newDosesAmount"));
+		
+		Connection connection = null;
+		
+		try {
+			
+		} catch(Exception e) {
+			System.out.println(e);
+		}
+			
+		for (Vaccine vaccine : ((List<Vaccine>) getServletContext().getAttribute("vaccines"))) {
+			if(vaccine.getId() == vaccineID) {
+				vaccine.setDosesLeft(vaccine.getDosesLeft() + vaccineDosesRecieved);
+			}
+		}
+		
+		response.sendRedirect("ListVaccines");
+		
+	}
+
+}

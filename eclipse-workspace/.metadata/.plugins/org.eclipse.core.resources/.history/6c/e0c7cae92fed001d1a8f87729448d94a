@@ -1,0 +1,94 @@
+package servlets;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
+
+import models.PatientViewModel;
+import models.Vaccine;
+
+@WebServlet("/NewPatient")
+public class NewPatient extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    public NewPatient() {
+        super();
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		int newPatientID = 3;
+		
+		String newPatientName = request.getParameter("newPatientName");
+		
+		int newPatientVaccineID = Integer.parseInt(request.getParameter("newPatientVaccineID"));
+		
+		String newPatientVaccineName = "";
+				
+		int newPatientVaccineDosesRequired = 0;
+		
+		int newPatientVaccineDosesLeft = 0;
+		
+		Date newPatientFirstDoseDate = new Date();
+		
+		for (Vaccine vaccine : ((List<Vaccine>) getServletContext().getAttribute("vaccines"))) {
+		    if(vaccine.getId() == newPatientVaccineID) {
+		    	newPatientVaccineName = vaccine.getName();
+		    	
+		    	newPatientVaccineDosesRequired = vaccine.getDosesRequired();
+		    	
+		    	newPatientVaccineDosesLeft = vaccine.getDosesLeft();
+		    	
+		    	break;
+		    }
+		}
+		
+        Connection connection = null;
+        
+        try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      		
+	      	connection = DriverManager.getConnection(url, username, password);
+	      	
+	      	String insertPatientSTM  = "INSERT INTO patients (name, vaccineID, firstDoseDate, secondDoseDate) VALUES (?, ?, ?, ?);";
+
+	      	PreparedStatement insertPatientPSTM = connection.prepareStatement(insertPatientSTM);
+	      	
+	      	insertPatientPSTM.setString(1, newPatientName);
+	      	insertPatientPSTM.setInt(2, newPatientVaccineID);
+	      	insertPatientPSTM.setDate(3, (java.sql.Date) newPatientFirstDoseDate);
+	      	insertPatientPSTM.setNull(4, java.sql.Types.INTEGER);
+	      	
+	      	insertPatientPSTM.executeUpdate();
+	      	
+	      	insertPatientPSTM.close();
+	      	
+        } catch(Exception e) {
+        	System.out.println(e);
+        }
+		
+		PatientViewModel patientViewModel = new PatientViewModel(newPatientID, newPatientName, newPatientVaccineID, newPatientVaccineName, newPatientVaccineDosesRequired, newPatientVaccineDosesLeft, newPatientFirstDoseDate, null);
+		
+		((List<PatientViewModel>) getServletContext().getAttribute("patients")).add(patientViewModel);
+		
+		response.sendRedirect("ListPatients");
+	}
+
+}

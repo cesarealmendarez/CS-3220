@@ -1,0 +1,41 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>List Vaccines</title>
+	</head>
+	<body>
+		<p style="margin-left: 40px;"><a href="NewVaccine">New Vaccine</a> | <a href="NewDoses">New Doses</a></p>
+		
+		<div style="margin-left: 40px;">
+	        <table border="1" cellpadding="5" cellspacing="2">
+	            <thead>
+	                <tr>
+	                    <th>Vaccine</th>
+	                    <th>Doses Required</th>
+	                    <th>Days Between Doses</th>
+	                    <th>Total Doses Received</th>
+	                    <th>Total Doses Left</th>
+	                    <th>&nbsp;</th>
+	                </tr>
+	            </thead>
+	            <tbody>
+	            	<c:forEach items="${vaccines}" var="vaccine">
+		                <tr>
+		                    <td>${vaccine.name}</td>
+		                    <td>${vaccine.dosesRequired}</td>
+		                    <td>${vaccine.daysBetweenDoses}</td>
+		                    <td>${vaccine.dosesRecieved}</td>
+		                    <td>${vaccine.dosesLeft}</td>
+		                    <td><a href="EditVaccine?id=${vaccine.id}&name=${vaccine.name}&dosesRequired=${vaccine.dosesRequired}&daysBetweenDoses=${vaccine.daysBetweenDoses}">Edit</a></td>
+		                </tr>
+	                </c:forEach>
+	            </tbody>
+	        </table>
+	    </div>		
+	</body>
+</html>

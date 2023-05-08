@@ -1,0 +1,2 @@
+INSERT INTO vaccines (id, name, dosesRequired, daysBetweenDoses, dosesReceived, dosesLeft)
+VALUES (1, 'Pfizer-BioNTech', 2, 21, 1, 1);
