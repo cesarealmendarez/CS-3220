@@ -21,7 +21,9 @@
 		                    <th>Vaccine</th>
 		                    <td><select name="newPatientVaccineID">
 		                    		<c:forEach items="${vaccines}" var="vaccine">
-			                            <option value="${vaccine.id}">${vaccine.name}</option>
+		                    			<c:if test="${vaccine.dosesLeft > 0}">
+			                            	<option value="${vaccine.id}">${vaccine.name}</option>
+			                            </c:if>
 		                            </c:forEach>
 		                        </select>
 		                    </td>

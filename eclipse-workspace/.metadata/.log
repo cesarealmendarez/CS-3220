@@ -3087,3 +3087,798 @@ java.lang.IllegalArgumentException
 	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup.calculateASTandInform(SelectionListenerWithASTManager.java:166)
 	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup$1.run(SelectionListenerWithASTManager.java:151)
 	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.jdt.core 4 4 2023-05-07 22:08:08.295
+!MESSAGE Exception occurred during compilation unit conversion:
+----------------------------------- SOURCE BEGIN -------------------------------------
+package servlets;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+//import java.sql.Date;
+import java.util.List;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+//import java.util.Date;
+
+
+import models.PatientViewModel;
+import models.Vaccine;
+
+@WebServlet("/NewPatient")
+public class NewPatient extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    public NewPatient() {
+        super();
+    }
+    
+    
+    public void init( ServletConfig config ) throws ServletException {
+    	super.init(config);
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		System.out.println("doget in new patient");
+    	getServletContext().removeAttribute("vaccines");
+    	
+    	Connection connection = null;
+    		
+    	try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      	
+	    	connection = DriverManager.getConnection(url, username, password);
+	    	
+	      	Statement selectVaccinesSTM = connection.createStatement();
+	      	
+	      	ResultSet selectVaccinesRS = selectVaccinesSTM.executeQuery("SELECT * FROM vaccines;");
+	      	
+	      	List<Vaccine> vaccines = new ArrayList<Vaccine>(); 
+	      	
+	      	while(selectVaccinesRS.next()) {	      		
+	      		int vaccineID = selectVaccinesRS.getInt("id");
+	      		
+	      		String vaccineName = selectVaccinesRS.getString("name");
+	      		
+	      		int vaccineDosesRequired = selectVaccinesRS.getInt("dosesRequired");
+	      		
+	      		int vaccineDaysBetweenDoses = selectVaccinesRS.getInt("daysBetweenDoses");
+	      		
+	      		int vaccineDosesReceived = selectVaccinesRS.getInt("dosesReceived");
+	      		
+	      		int vaccineDosesLeft = selectVaccinesRS.getInt("dosesLeft");
+	      		
+	      		Vaccine vaccine = new Vaccine(vaccineID, vaccineName, vaccineDosesRequired, vaccineDaysBetweenDoses, vaccineDosesReceived, vaccineDosesLeft);
+	      		
+	      		vaccines.add(vaccine);
+	      		
+	      	}
+	      	
+	      	System.out.println(vaccines.size());
+	      	
+//	      	System.out.println(vaccines.size());
+	      	
+	      	getServletContext().setAttribute("vaccines", vaccines);
+	      	
+	      	request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+    	} catch(Exception e) {
+    		System.out.println(e);
+    	}
+//		request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+//		int newPatientID = 3;
+		int newPatientID = 0;
+		
+		(((List<PatientViewModel>) getServletContext().getAttribute("patients")).get(((List<PatientViewModel>) getServletContext().getAttribute("patients")).size() - 1).getId() + 1);
+		
+		String newPatientName = request.getParameter("newPatientName");
+		
+		int newPatientVaccineID = Integer.parseInt(request.getParameter("newPatientVaccineID"));
+		
+		String newPatientVaccineName = "";
+				
+		int newPatientVaccineDosesRequired = 0;
+		
+		int newPatientVaccineDosesLeft = 0;
+		
+//		Date newPatientFirstDoseDate = new Date();
+		java.util.Date utilDate = new java.util.Date(); // Create a new java.util.Date object representing the current time
+		long milliseconds = utilDate.getTime(); // Get the number of milliseconds since January 1, 1970, 00:00:00 GMT
+		java.sql.Date sqlDate = new java.sql.Date(milliseconds); // Create a new java.sql.Date object representing the current date and time
+
+		
+		for (Vaccine vaccine : ((List<Vaccine>) getServletContext().getAttribute("vaccines"))) {
+		    if(vaccine.getId() == newPatientVaccineID) {
+		    	newPatientVaccineName = vaccine.getName();
+		    	
+		    	newPatientVaccineDosesRequired = vaccine.getDosesRequired();
+		    	
+		    	newPatientVaccineDosesLeft = vaccine.getDosesLeft() - 1;
+		    	
+		    	break;
+		    }
+		}
+		
+        Connection connection = null;
+        
+        try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      		
+	      	connection = DriverManager.getConnection(url, username, password);
+	      	
+	      	String insertPatientSTM  = "INSERT INTO patients (name, vaccineID, firstDoseDate, secondDoseDate) VALUES (?, ?, ?, ?);";
+
+	      	PreparedStatement insertPatientPSTM = connection.prepareStatement(insertPatientSTM);
+	      	
+	      	insertPatientPSTM.setString(1, newPatientName);
+	      	insertPatientPSTM.setInt(2, newPatientVaccineID);
+	      	insertPatientPSTM.setDate(3, sqlDate);
+	      	insertPatientPSTM.setNull(4, java.sql.Types.INTEGER);
+	      	
+	      	insertPatientPSTM.executeUpdate();
+	      	
+	      	insertPatientPSTM.close();
+	      	
+	      	String updateVaccineDosesSTM = "UPDATE vaccines SET dosesLeft = ? WHERE id = ?";
+	      	
+	      	PreparedStatement updateVaccineDosesPSTM = connection.prepareStatement(updateVaccineDosesSTM);
+	      	
+	      	updateVaccineDosesPSTM.setInt(1, newPatientVaccineDosesLeft);
+	      	updateVaccineDosesPSTM.setInt(2, newPatientVaccineID);
+	      	
+	      	updateVaccineDosesPSTM.executeUpdate();
+	      	
+        } catch(Exception e) {
+        	System.out.println(e);
+        }
+		
+		PatientViewModel patientViewModel = new PatientViewModel(newPatientID, newPatientName, newPatientVaccineID, newPatientVaccineName, newPatientVaccineDosesRequired, newPatientVaccineDosesLeft, sqlDate, null);
+		
+		((List<PatientViewModel>) getServletContext().getAttribute("patients")).add(patientViewModel);
+		
+		response.sendRedirect("ListPatients");
+	}
+
+}
+
+----------------------------------- SOURCE END -------------------------------------
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.AST.convertCompilationUnit(AST.java:561)
+	at org.eclipse.jdt.internal.core.CompilationUnit.buildStructure(CompilationUnit.java:201)
+	at org.eclipse.jdt.internal.core.Openable.generateInfos(Openable.java:266)
+	at org.eclipse.jdt.internal.core.JavaElement.openWhenClosed(JavaElement.java:597)
+	at org.eclipse.jdt.internal.core.CompilationUnit.makeConsistent(CompilationUnit.java:1148)
+	at org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation.makeConsistent(ReconcileWorkingCopyOperation.java:173)
+	at org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation.executeOperation(ReconcileWorkingCopyOperation.java:94)
+	at org.eclipse.jdt.internal.core.JavaModelOperation.run(JavaModelOperation.java:740)
+	at org.eclipse.jdt.internal.core.JavaModelOperation.runOperation(JavaModelOperation.java:806)
+	at org.eclipse.jdt.internal.core.CompilationUnit.reconcile(CompilationUnit.java:1325)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:132)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy$1.run(JavaReconcilingStrategy.java:94)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:91)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:158)
+	at org.eclipse.jdt.internal.ui.text.CompositeReconcilingStrategy.reconcile(CompositeReconcilingStrategy.java:94)
+	at org.eclipse.jdt.internal.ui.text.JavaCompositeReconcilingStrategy.reconcile(JavaCompositeReconcilingStrategy.java:107)
+	at org.eclipse.jface.text.reconciler.MonoReconciler.process(MonoReconciler.java:78)
+	at org.eclipse.jface.text.reconciler.AbstractReconciler$BackgroundThread.run(AbstractReconciler.java:207)
+
+!ENTRY org.eclipse.jdt.ui 4 2 2023-05-07 22:08:08.302
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.jdt.ui".
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.AST.convertCompilationUnit(AST.java:561)
+	at org.eclipse.jdt.internal.core.CompilationUnit.buildStructure(CompilationUnit.java:201)
+	at org.eclipse.jdt.internal.core.Openable.generateInfos(Openable.java:266)
+	at org.eclipse.jdt.internal.core.JavaElement.openWhenClosed(JavaElement.java:597)
+	at org.eclipse.jdt.internal.core.CompilationUnit.makeConsistent(CompilationUnit.java:1148)
+	at org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation.makeConsistent(ReconcileWorkingCopyOperation.java:173)
+	at org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation.executeOperation(ReconcileWorkingCopyOperation.java:94)
+	at org.eclipse.jdt.internal.core.JavaModelOperation.run(JavaModelOperation.java:740)
+	at org.eclipse.jdt.internal.core.JavaModelOperation.runOperation(JavaModelOperation.java:806)
+	at org.eclipse.jdt.internal.core.CompilationUnit.reconcile(CompilationUnit.java:1325)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:132)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy$1.run(JavaReconcilingStrategy.java:94)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:91)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:158)
+	at org.eclipse.jdt.internal.ui.text.CompositeReconcilingStrategy.reconcile(CompositeReconcilingStrategy.java:94)
+	at org.eclipse.jdt.internal.ui.text.JavaCompositeReconcilingStrategy.reconcile(JavaCompositeReconcilingStrategy.java:107)
+	at org.eclipse.jface.text.reconciler.MonoReconciler.process(MonoReconciler.java:78)
+	at org.eclipse.jface.text.reconciler.AbstractReconciler$BackgroundThread.run(AbstractReconciler.java:207)
+
+!ENTRY org.eclipse.jdt.ui 4 0 2023-05-07 22:08:08.302
+!MESSAGE Error in JDT Core during reconcile
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.AST.convertCompilationUnit(AST.java:561)
+	at org.eclipse.jdt.internal.core.CompilationUnit.buildStructure(CompilationUnit.java:201)
+	at org.eclipse.jdt.internal.core.Openable.generateInfos(Openable.java:266)
+	at org.eclipse.jdt.internal.core.JavaElement.openWhenClosed(JavaElement.java:597)
+	at org.eclipse.jdt.internal.core.CompilationUnit.makeConsistent(CompilationUnit.java:1148)
+	at org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation.makeConsistent(ReconcileWorkingCopyOperation.java:173)
+	at org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation.executeOperation(ReconcileWorkingCopyOperation.java:94)
+	at org.eclipse.jdt.internal.core.JavaModelOperation.run(JavaModelOperation.java:740)
+	at org.eclipse.jdt.internal.core.JavaModelOperation.runOperation(JavaModelOperation.java:806)
+	at org.eclipse.jdt.internal.core.CompilationUnit.reconcile(CompilationUnit.java:1325)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:132)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy$1.run(JavaReconcilingStrategy.java:94)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:91)
+	at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:158)
+	at org.eclipse.jdt.internal.ui.text.CompositeReconcilingStrategy.reconcile(CompositeReconcilingStrategy.java:94)
+	at org.eclipse.jdt.internal.ui.text.JavaCompositeReconcilingStrategy.reconcile(JavaCompositeReconcilingStrategy.java:107)
+	at org.eclipse.jface.text.reconciler.MonoReconciler.process(MonoReconciler.java:78)
+	at org.eclipse.jface.text.reconciler.AbstractReconciler$BackgroundThread.run(AbstractReconciler.java:207)
+
+!ENTRY org.eclipse.jdt.core 4 4 2023-05-07 22:08:08.487
+!MESSAGE Exception occurred during compilation unit conversion:
+----------------------------------- SOURCE BEGIN -------------------------------------
+package servlets;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+//import java.sql.Date;
+import java.util.List;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+//import java.util.Date;
+
+
+import models.PatientViewModel;
+import models.Vaccine;
+
+@WebServlet("/NewPatient")
+public class NewPatient extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    public NewPatient() {
+        super();
+    }
+    
+    
+    public void init( ServletConfig config ) throws ServletException {
+    	super.init(config);
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		System.out.println("doget in new patient");
+    	getServletContext().removeAttribute("vaccines");
+    	
+    	Connection connection = null;
+    		
+    	try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      	
+	    	connection = DriverManager.getConnection(url, username, password);
+	    	
+	      	Statement selectVaccinesSTM = connection.createStatement();
+	      	
+	      	ResultSet selectVaccinesRS = selectVaccinesSTM.executeQuery("SELECT * FROM vaccines;");
+	      	
+	      	List<Vaccine> vaccines = new ArrayList<Vaccine>(); 
+	      	
+	      	while(selectVaccinesRS.next()) {	      		
+	      		int vaccineID = selectVaccinesRS.getInt("id");
+	      		
+	      		String vaccineName = selectVaccinesRS.getString("name");
+	      		
+	      		int vaccineDosesRequired = selectVaccinesRS.getInt("dosesRequired");
+	      		
+	      		int vaccineDaysBetweenDoses = selectVaccinesRS.getInt("daysBetweenDoses");
+	      		
+	      		int vaccineDosesReceived = selectVaccinesRS.getInt("dosesReceived");
+	      		
+	      		int vaccineDosesLeft = selectVaccinesRS.getInt("dosesLeft");
+	      		
+	      		Vaccine vaccine = new Vaccine(vaccineID, vaccineName, vaccineDosesRequired, vaccineDaysBetweenDoses, vaccineDosesReceived, vaccineDosesLeft);
+	      		
+	      		vaccines.add(vaccine);
+	      		
+	      	}
+	      	
+	      	System.out.println(vaccines.size());
+	      	
+//	      	System.out.println(vaccines.size());
+	      	
+	      	getServletContext().setAttribute("vaccines", vaccines);
+	      	
+	      	request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+    	} catch(Exception e) {
+    		System.out.println(e);
+    	}
+//		request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+//		int newPatientID = 3;
+		int newPatientID = 0;
+		
+		(((List<PatientViewModel>) getServletContext().getAttribute("patients")).get(((List<PatientViewModel>) getServletContext().getAttribute("patients")).size() - 1).getId() + 1);
+		
+		String newPatientName = request.getParameter("newPatientName");
+		
+		int newPatientVaccineID = Integer.parseInt(request.getParameter("newPatientVaccineID"));
+		
+		String newPatientVaccineName = "";
+				
+		int newPatientVaccineDosesRequired = 0;
+		
+		int newPatientVaccineDosesLeft = 0;
+		
+//		Date newPatientFirstDoseDate = new Date();
+		java.util.Date utilDate = new java.util.Date(); // Create a new java.util.Date object representing the current time
+		long milliseconds = utilDate.getTime(); // Get the number of milliseconds since January 1, 1970, 00:00:00 GMT
+		java.sql.Date sqlDate = new java.sql.Date(milliseconds); // Create a new java.sql.Date object representing the current date and time
+
+		
+		for (Vaccine vaccine : ((List<Vaccine>) getServletContext().getAttribute("vaccines"))) {
+		    if(vaccine.getId() == newPatientVaccineID) {
+		    	newPatientVaccineName = vaccine.getName();
+		    	
+		    	newPatientVaccineDosesRequired = vaccine.getDosesRequired();
+		    	
+		    	newPatientVaccineDosesLeft = vaccine.getDosesLeft() - 1;
+		    	
+		    	break;
+		    }
+		}
+		
+        Connection connection = null;
+        
+        try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      		
+	      	connection = DriverManager.getConnection(url, username, password);
+	      	
+	      	String insertPatientSTM  = "INSERT INTO patients (name, vaccineID, firstDoseDate, secondDoseDate) VALUES (?, ?, ?, ?);";
+
+	      	PreparedStatement insertPatientPSTM = connection.prepareStatement(insertPatientSTM);
+	      	
+	      	insertPatientPSTM.setString(1, newPatientName);
+	      	insertPatientPSTM.setInt(2, newPatientVaccineID);
+	      	insertPatientPSTM.setDate(3, sqlDate);
+	      	insertPatientPSTM.setNull(4, java.sql.Types.INTEGER);
+	      	
+	      	insertPatientPSTM.executeUpdate();
+	      	
+	      	insertPatientPSTM.close();
+	      	
+	      	String updateVaccineDosesSTM = "UPDATE vaccines SET dosesLeft = ? WHERE id = ?";
+	      	
+	      	PreparedStatement updateVaccineDosesPSTM = connection.prepareStatement(updateVaccineDosesSTM);
+	      	
+	      	updateVaccineDosesPSTM.setInt(1, newPatientVaccineDosesLeft);
+	      	updateVaccineDosesPSTM.setInt(2, newPatientVaccineID);
+	      	
+	      	updateVaccineDosesPSTM.executeUpdate();
+	      	
+        } catch(Exception e) {
+        	System.out.println(e);
+        }
+		
+		PatientViewModel patientViewModel = new PatientViewModel(newPatientID, newPatientName, newPatientVaccineID, newPatientVaccineName, newPatientVaccineDosesRequired, newPatientVaccineDosesLeft, sqlDate, null);
+		
+		((List<PatientViewModel>) getServletContext().getAttribute("patients")).add(patientViewModel);
+		
+		response.sendRedirect("ListPatients");
+	}
+
+}
+
+----------------------------------- SOURCE END -------------------------------------
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:344)
+	at org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1272)
+	at org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:294)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:286)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:199)
+	at org.eclipse.jdt.core.manipulation.SharedASTProviderCore.getAST(SharedASTProviderCore.java:138)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup.calculateASTandInform(SelectionListenerWithASTManager.java:166)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup$1.run(SelectionListenerWithASTManager.java:151)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.jdt.core.manipulation 4 2 2023-05-07 22:08:08.494
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.jdt.core.manipulation".
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:344)
+	at org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1272)
+	at org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:294)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:286)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:199)
+	at org.eclipse.jdt.core.manipulation.SharedASTProviderCore.getAST(SharedASTProviderCore.java:138)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup.calculateASTandInform(SelectionListenerWithASTManager.java:166)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup$1.run(SelectionListenerWithASTManager.java:151)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.jdt.core.manipulation 4 0 2023-05-07 22:08:08.501
+!MESSAGE Error in JDT Core during AST creation
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:344)
+	at org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1272)
+	at org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:294)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:286)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:199)
+	at org.eclipse.jdt.core.manipulation.SharedASTProviderCore.getAST(SharedASTProviderCore.java:138)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup.calculateASTandInform(SelectionListenerWithASTManager.java:166)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup$1.run(SelectionListenerWithASTManager.java:151)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.jdt.core 4 4 2023-05-07 22:08:09.661
+!MESSAGE Exception occurred during compilation unit conversion:
+----------------------------------- SOURCE BEGIN -------------------------------------
+package servlets;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+//import java.sql.Date;
+import java.util.List;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+//import java.util.Date;
+
+
+import models.PatientViewModel;
+import models.Vaccine;
+
+@WebServlet("/NewPatient")
+public class NewPatient extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    public NewPatient() {
+        super();
+    }
+    
+    
+    public void init( ServletConfig config ) throws ServletException {
+    	super.init(config);
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		System.out.println("doget in new patient");
+    	getServletContext().removeAttribute("vaccines");
+    	
+    	Connection connection = null;
+    		
+    	try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      	
+	    	connection = DriverManager.getConnection(url, username, password);
+	    	
+	      	Statement selectVaccinesSTM = connection.createStatement();
+	      	
+	      	ResultSet selectVaccinesRS = selectVaccinesSTM.executeQuery("SELECT * FROM vaccines;");
+	      	
+	      	List<Vaccine> vaccines = new ArrayList<Vaccine>(); 
+	      	
+	      	while(selectVaccinesRS.next()) {	      		
+	      		int vaccineID = selectVaccinesRS.getInt("id");
+	      		
+	      		String vaccineName = selectVaccinesRS.getString("name");
+	      		
+	      		int vaccineDosesRequired = selectVaccinesRS.getInt("dosesRequired");
+	      		
+	      		int vaccineDaysBetweenDoses = selectVaccinesRS.getInt("daysBetweenDoses");
+	      		
+	      		int vaccineDosesReceived = selectVaccinesRS.getInt("dosesReceived");
+	      		
+	      		int vaccineDosesLeft = selectVaccinesRS.getInt("dosesLeft");
+	      		
+	      		Vaccine vaccine = new Vaccine(vaccineID, vaccineName, vaccineDosesRequired, vaccineDaysBetweenDoses, vaccineDosesReceived, vaccineDosesLeft);
+	      		
+	      		vaccines.add(vaccine);
+	      		
+	      	}
+	      	
+	      	System.out.println(vaccines.size());
+	      	
+//	      	System.out.println(vaccines.size());
+	      	
+	      	getServletContext().setAttribute("vaccines", vaccines);
+	      	
+	      	request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+    	} catch(Exception e) {
+    		System.out.println(e);
+    	}
+//		request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+//		int newPatientID = 3;
+		int newPatientID = 0;
+		
+		(((List<PatientViewModel>) getServletContext().getAttribute("patients")).get(((List<PatientViewModel>) getServletContext().getAttribute("patients")).size() - 1).getId() + 1);
+		
+		String newPatientName = request.getParameter("newPatientName");
+		
+		int newPatientVaccineID = Integer.parseInt(request.getParameter("newPatientVaccineID"));
+		
+		String newPatientVaccineName = "";
+				
+		int newPatientVaccineDosesRequired = 0;
+		
+		int newPatientVaccineDosesLeft = 0;
+		
+//		Date newPatientFirstDoseDate = new Date();
+		java.util.Date utilDate = new java.util.Date(); // Create a new java.util.Date object representing the current time
+		long milliseconds = utilDate.getTime(); // Get the number of milliseconds since January 1, 1970, 00:00:00 GMT
+		java.sql.Date sqlDate = new java.sql.Date(milliseconds); // Create a new java.sql.Date object representing the current date and time
+
+		
+		for (Vaccine vaccine : ((List<Vaccine>) getServletContext().getAttribute("vaccines"))) {
+		    if(vaccine.getId() == newPatientVaccineID) {
+		    	newPatientVaccineName = vaccine.getName();
+		    	
+		    	newPatientVaccineDosesRequired = vaccine.getDosesRequired();
+		    	
+		    	newPatientVaccineDosesLeft = vaccine.getDosesLeft() - 1;
+		    	
+		    	break;
+		    }
+		}
+		
+        Connection connection = null;
+        
+        try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      		
+	      	connection = DriverManager.getConnection(url, username, password);
+	      	
+	      	String insertPatientSTM  = "INSERT INTO patients (name, vaccineID, firstDoseDate, secondDoseDate) VALUES (?, ?, ?, ?);";
+
+	      	PreparedStatement insertPatientPSTM = connection.prepareStatement(insertPatientSTM);
+	      	
+	      	insertPatientPSTM.setString(1, newPatientName);
+	      	insertPatientPSTM.setInt(2, newPatientVaccineID);
+	      	insertPatientPSTM.setDate(3, sqlDate);
+	      	insertPatientPSTM.setNull(4, java.sql.Types.INTEGER);
+	      	
+	      	insertPatientPSTM.executeUpdate();
+	      	
+	      	insertPatientPSTM.close();
+	      	
+	      	String updateVaccineDosesSTM = "UPDATE vaccines SET dosesLeft = ? WHERE id = ?";
+	      	
+	      	PreparedStatement updateVaccineDosesPSTM = connection.prepareStatement(updateVaccineDosesSTM);
+	      	
+	      	updateVaccineDosesPSTM.setInt(1, newPatientVaccineDosesLeft);
+	      	updateVaccineDosesPSTM.setInt(2, newPatientVaccineID);
+	      	
+	      	updateVaccineDosesPSTM.executeUpdate();
+	      	
+        } catch(Exception e) {
+        	System.out.println(e);
+        }
+		
+		PatientViewModel patientViewModel = new PatientViewModel(newPatientID, newPatientName, newPatientVaccineID, newPatientVaccineName, newPatientVaccineDosesRequired, newPatientVaccineDosesLeft, sqlDate, null);
+		
+		((List<PatientViewModel>) getServletContext().getAttribute("patients")).add(patientViewModel);
+		
+		response.sendRedirect("ListPatients");
+	}
+
+}
+
+----------------------------------- SOURCE END -------------------------------------
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:344)
+	at org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1272)
+	at org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:294)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:286)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:199)
+	at org.eclipse.jdt.core.manipulation.SharedASTProviderCore.getAST(SharedASTProviderCore.java:138)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup.calculateASTandInform(SelectionListenerWithASTManager.java:166)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup$1.run(SelectionListenerWithASTManager.java:151)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.jdt.core.manipulation 4 2 2023-05-07 22:08:09.662
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.jdt.core.manipulation".
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:344)
+	at org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1272)
+	at org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:294)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:286)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:199)
+	at org.eclipse.jdt.core.manipulation.SharedASTProviderCore.getAST(SharedASTProviderCore.java:138)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup.calculateASTandInform(SelectionListenerWithASTManager.java:166)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup$1.run(SelectionListenerWithASTManager.java:151)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.jdt.core.manipulation 4 0 2023-05-07 22:08:09.662
+!MESSAGE Error in JDT Core during AST creation
+!STACK 0
+java.lang.IllegalArgumentException
+	at org.eclipse.jdt.core.dom.InfixExpression.setOperator(InfixExpression.java:383)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1287)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2047)
+	at org.eclipse.jdt.core.dom.ASTConverter.convertToParenthesizedExpression(ASTConverter.java:3882)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1953)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1204)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1990)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3124)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:751)
+	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:208)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3419)
+	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1534)
+	at org.eclipse.jdt.core.dom.CompilationUnitResolver.convert(CompilationUnitResolver.java:344)
+	at org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:1272)
+	at org.eclipse.jdt.core.dom.ASTParser.createAST(ASTParser.java:868)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider$1.run(CoreASTProvider.java:294)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:45)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.createAST(CoreASTProvider.java:286)
+	at org.eclipse.jdt.core.manipulation.CoreASTProvider.getAST(CoreASTProvider.java:199)
+	at org.eclipse.jdt.core.manipulation.SharedASTProviderCore.getAST(SharedASTProviderCore.java:138)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup.calculateASTandInform(SelectionListenerWithASTManager.java:166)
+	at org.eclipse.jdt.internal.ui.viewsupport.SelectionListenerWithASTManager$PartListenerGroup$1.run(SelectionListenerWithASTManager.java:151)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)

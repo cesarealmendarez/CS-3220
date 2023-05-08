@@ -3,6 +3,7 @@ package servlets;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Date;
 import java.sql.Statement;
@@ -169,28 +170,77 @@ public class ListPatients extends HttpServlet {
 	}
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
 		int patientID = Integer.parseInt(request.getParameter("patientID"));
 		
-//		System.out.println(patientID);
-			
+		int patientVaccineID = Integer.parseInt(request.getParameter("patientVaccineID"));
+		
+		int patientVaccineDosesLeft = Integer.parseInt(request.getParameter("patientVaccineDosesLeft"));
+		
 		java.util.Date utilDate = new java.util.Date(); // Create a new java.util.Date object representing the current time
 		long milliseconds = utilDate.getTime(); // Get the number of milliseconds since January 1, 1970, 00:00:00 GMT
 		java.sql.Date sqlDate = new java.sql.Date(milliseconds); // Create a new java.sql.Date object representing the current date and time
 		
-		for (PatientViewModel patientViewModel : ((List<PatientViewModel>) getServletContext().getAttribute("patients"))) {
-			if(patientViewModel.getId() == patientID) {
-				System.out.println(patientViewModel.getSecondDoseDate());
-				patientViewModel.setSecondDoseDate(sqlDate);
-				System.out.println(patientViewModel.getSecondDoseDate());
-				
-//				vaccine.setDosesLeft(vaccine.getDosesLeft() + vaccineDosesRecieved);
-//				vaccinesNewLeftRecieved = vaccine.getDosesLeft() + vaccineDosesRecieved;
+        Connection connection = null;
+        
+        try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      		
+	      	connection = DriverManager.getConnection(url, username, password);
+	      	
+	      	String updatePatientSTM = "UPDATE patients SET secondDoseDate = ? WHERE id = ?";
+	      	
+	      	PreparedStatement updatePatientPSTM = connection.prepareStatement(updatePatientSTM);
+	      	
+	      	updatePatientPSTM.setDate(1, sqlDate);
+	      	updatePatientPSTM.setInt(2, patientID);
+	      	
+	      	updatePatientPSTM.executeUpdate();
+	      	
+	      	updatePatientPSTM.close();
+	      	
+	      	String updateVaccineSTM = "UPDATE vaccines SET dosesLeft = ? WHERE id = ?";
+	      	
+	      	PreparedStatement updateVaccinePSTM = connection.prepareStatement(updateVaccineSTM);
+	      	
+	      	updateVaccinePSTM.setInt(1, patientVaccineDosesLeft - 1);
+	      	updateVaccinePSTM.setInt(2, patientVaccineID);
+	      	
+	      	updateVaccinePSTM.executeUpdate();
+	      	
+	      	updateVaccinePSTM.close();
+	      	
+        } catch(Exception e) {
+        	System.out.println(e);
+        }
+        
+        response.sendRedirect("ListPatients");
+//		int patientID = Integer.parseInt(request.getParameter("patientID"));
+//		
+////		System.out.println(patientID);
+//			
+//		java.util.Date utilDate = new java.util.Date(); // Create a new java.util.Date object representing the current time
+//		long milliseconds = utilDate.getTime(); // Get the number of milliseconds since January 1, 1970, 00:00:00 GMT
+//		java.sql.Date sqlDate = new java.sql.Date(milliseconds); // Create a new java.sql.Date object representing the current date and time
+//		
+//		for (PatientViewModel patientViewModel : ((List<PatientViewModel>) getServletContext().getAttribute("patients"))) {
+//			if(patientViewModel.getId() == patientID) {
+//				System.out.println(patientViewModel.getSecondDoseDate());
+//				patientViewModel.setSecondDoseDate(sqlDate);
+//				System.out.println(patientViewModel.getSecondDoseDate());
 //				
-//				vaccine.setDosesRecieved(vaccine.getDosesRecieved() + vaccineDosesRecieved);
-//				vaccinesNewDosesRecieved = vaccine.getDosesRecieved() + vaccineDosesRecieved;
-			}
-		}
-		
-		response.sendRedirect("ListPatients");
+////				vaccine.setDosesLeft(vaccine.getDosesLeft() + vaccineDosesRecieved);
+////				vaccinesNewLeftRecieved = vaccine.getDosesLeft() + vaccineDosesRecieved;
+////				
+////				vaccine.setDosesRecieved(vaccine.getDosesRecieved() + vaccineDosesRecieved);
+////				vaccinesNewDosesRecieved = vaccine.getDosesRecieved() + vaccineDosesRecieved;
+//			}
+//		}
+//		
+//		response.sendRedirect("ListPatients");
 	}
 }

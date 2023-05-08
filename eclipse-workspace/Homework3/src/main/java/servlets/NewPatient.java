@@ -4,9 +4,13 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
 //import java.sql.Date;
 import java.util.List;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -25,15 +29,78 @@ public class NewPatient extends HttpServlet {
     public NewPatient() {
         super();
     }
+    
+    
+    public void init( ServletConfig config ) throws ServletException {
+    	super.init(config);
+    }
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+		System.out.println("doget in new patient");
+    	getServletContext().removeAttribute("vaccines");
+    	
+    	Connection connection = null;
+    		
+    	try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      	
+	    	connection = DriverManager.getConnection(url, username, password);
+	    	
+	      	Statement selectVaccinesSTM = connection.createStatement();
+	      	
+	      	ResultSet selectVaccinesRS = selectVaccinesSTM.executeQuery("SELECT * FROM vaccines;");
+	      	
+	      	List<Vaccine> vaccines = new ArrayList<Vaccine>(); 
+	      	
+	      	while(selectVaccinesRS.next()) {	      		
+	      		int vaccineID = selectVaccinesRS.getInt("id");
+	      		
+	      		String vaccineName = selectVaccinesRS.getString("name");
+	      		
+	      		int vaccineDosesRequired = selectVaccinesRS.getInt("dosesRequired");
+	      		
+	      		int vaccineDaysBetweenDoses = selectVaccinesRS.getInt("daysBetweenDoses");
+	      		
+	      		int vaccineDosesReceived = selectVaccinesRS.getInt("dosesReceived");
+	      		
+	      		int vaccineDosesLeft = selectVaccinesRS.getInt("dosesLeft");
+	      		
+	      		Vaccine vaccine = new Vaccine(vaccineID, vaccineName, vaccineDosesRequired, vaccineDaysBetweenDoses, vaccineDosesReceived, vaccineDosesLeft);
+	      		
+	      		vaccines.add(vaccine);
+	      		
+	      	}
+	      	
+	      	System.out.println(vaccines.size());
+	      	
+//	      	System.out.println(vaccines.size());
+	      	
+	      	getServletContext().setAttribute("vaccines", vaccines);
+	      	
+	      	request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
+    	} catch(Exception e) {
+    		System.out.println(e);
+    	}
+//		request.getRequestDispatcher("NewPatient.jsp").forward(request, response);
 	}
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 //		int newPatientID = 3;
-		int newPatientID = (((List<PatientViewModel>) getServletContext().getAttribute("patients")).get(((List<PatientViewModel>) getServletContext().getAttribute("patients")).size() - 1).getId() + 1);
+		int newPatientID = 0;
+		
+//		System.out.println(((List<Vaccine>) getServletContext().getAttribute("vaccines")).size());
+		if(((List<PatientViewModel>) getServletContext().getAttribute("patients")).size() == 0) {
+			newPatientID = 0;	
+			System.out.print("this");
+		} else {
+			newPatientID = (((List<PatientViewModel>) getServletContext().getAttribute("patients")).get(((List<PatientViewModel>) getServletContext().getAttribute("patients")).size() - 1).getId() + 1);
+		}
+		
 		
 		String newPatientName = request.getParameter("newPatientName");
 		
@@ -57,7 +124,7 @@ public class NewPatient extends HttpServlet {
 		    	
 		    	newPatientVaccineDosesRequired = vaccine.getDosesRequired();
 		    	
-		    	newPatientVaccineDosesLeft = vaccine.getDosesLeft();
+		    	newPatientVaccineDosesLeft = vaccine.getDosesLeft() - 1;
 		    	
 		    	break;
 		    }
@@ -86,6 +153,15 @@ public class NewPatient extends HttpServlet {
 	      	insertPatientPSTM.executeUpdate();
 	      	
 	      	insertPatientPSTM.close();
+	      	
+	      	String updateVaccineDosesSTM = "UPDATE vaccines SET dosesLeft = ? WHERE id = ?";
+	      	
+	      	PreparedStatement updateVaccineDosesPSTM = connection.prepareStatement(updateVaccineDosesSTM);
+	      	
+	      	updateVaccineDosesPSTM.setInt(1, newPatientVaccineDosesLeft);
+	      	updateVaccineDosesPSTM.setInt(2, newPatientVaccineID);
+	      	
+	      	updateVaccineDosesPSTM.executeUpdate();
 	      	
         } catch(Exception e) {
         	System.out.println(e);

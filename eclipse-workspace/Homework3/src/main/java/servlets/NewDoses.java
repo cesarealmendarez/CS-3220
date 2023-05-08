@@ -37,11 +37,17 @@ public class NewDoses extends HttpServlet {
 			
 		for (Vaccine vaccine : ((List<Vaccine>) getServletContext().getAttribute("vaccines"))) {
 			if(vaccine.getId() == vaccineID) {
-				vaccine.setDosesLeft(vaccine.getDosesLeft() + vaccineDosesRecieved);
+//				vaccine.setDosesLeft(vaccine.getDosesLeft() + vaccineDosesRecieved);
 				vaccinesNewLeftRecieved = vaccine.getDosesLeft() + vaccineDosesRecieved;
 				
-				vaccine.setDosesRecieved(vaccine.getDosesRecieved() + vaccineDosesRecieved);
+//				vaccine.setDosesRecieved(vaccine.getDosesRecieved() + vaccineDosesRecieved);
 				vaccinesNewDosesRecieved = vaccine.getDosesRecieved() + vaccineDosesRecieved;
+				
+//		        vaccine.setDosesLeft(vaccine.getDosesLeft() + vaccineDosesRecieved);
+//		        vaccinesNewLeftRecieved = vaccine.getDosesLeft();
+//		        
+//		        vaccine.setDosesRecieved(vaccine.getDosesRecieved() + vaccineDosesRecieved);
+//		        vaccinesNewDosesRecieved = vaccine.getDosesRecieved();
 			}
 		}
 		

@@ -26,6 +26,8 @@
 	            	<c:forEach items="${patients}" var="patient">
 	            		<form action="ListPatients" method="post">
 	            			<input type="hidden" name="patientID" value="${patient.id}"/>
+	            			<input type="hidden" name="patientVaccineID" value="${patient.vaccineID}"/>
+	            			<input type="hidden" name="patientVaccineDosesLeft" value="${patient.vaccineDosesLeft}"/>
 			                <tr>
 			                    <td>${patient.id}</td>
 			                    <td>${patient.name}</td>
@@ -36,7 +38,7 @@
 			                    	<c:if test="${patient.secondDoseDate == null}">
 			                    		<c:if test="${patient.vaccineDosesLeft > 0}">
 			                    			<td>
-			                    				<input type="submit" name="add" value="Receieved" />
+			                    				<input type="submit" name="add" value="Received" />
 			                    			</td>
 			                    		</c:if>
 			                    		
