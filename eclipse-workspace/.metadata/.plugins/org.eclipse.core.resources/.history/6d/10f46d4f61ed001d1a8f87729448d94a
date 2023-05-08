@@ -1,0 +1,76 @@
+package servlets;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import models.Vaccine;
+
+@WebServlet("/NewVaccine")
+public class NewVaccine extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    public NewVaccine() {
+        super();
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("NewVaccine.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String newVaccineName = request.getParameter("newVaccineName");
+       
+        int newVaccineDosesRequired = Integer.parseInt(request.getParameter("newVaccineDosesRequired"));
+        
+        int newVaccineDaysBetweenDoses = Integer.parseInt(request.getParameter("vaccineDaysBetweenDoses"));
+        	
+        Connection connection = null;
+        
+        try {
+	      	String url = "jdbc:mysql://cs3.calstatela.edu/cs3220stu02";
+	      	
+	      	String username = "cs3220stu02";
+	      	
+	      	String password = "Pn01IFHp50Sq";
+	      	
+	      		
+	      	connection = DriverManager.getConnection(url, username, password);
+	      	
+	      	String insertVaccineSTM = "INSERT INTO vaccines (name, dosesRequired, daysBetweenDoses, dosesReceived, dosesLeft) VALUES (?, ?, ?, ?, ?)";
+	      	
+	      	PreparedStatement insertVaccinePSTM = connection.prepareStatement(insertVaccineSTM);
+	      	
+	      	insertVaccinePSTM.setString(1, newVaccineName);
+	      	insertVaccinePSTM.setInt(2, newVaccineDosesRequired);
+	      	insertVaccinePSTM.setInt(3, newVaccineDaysBetweenDoses);
+	      	insertVaccinePSTM.setInt(4, 0);
+	      	insertVaccinePSTM.setInt(5, 0);
+	      	
+	      	insertVaccinePSTM.executeUpdate();
+	      	
+        } catch(Exception e) {
+        	System.out.println(e);
+        }
+        
+        
+        int newVaccineID = (((List<Vaccine>) getServletContext().getAttribute("vaccines")).get(((List<Vaccine>) getServletContext().getAttribute("vaccines")).size() - 1).getId() + 1);
+        		
+       
+        Vaccine vaccine = new Vaccine(newVaccineID, newVaccineName, newVaccineDosesRequired, newVaccineDaysBetweenDoses, 0, 0);
+        
+        ((List<Vaccine>) getServletContext().getAttribute("vaccines")).add(vaccine);
+        
+        response.sendRedirect("ListVaccines");	
+        
+	}
+
+}
